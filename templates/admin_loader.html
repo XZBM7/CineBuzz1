@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+</head>
+<body>
+<script>
+    sessionStorage.setItem("is_admin", "{{ is_admin }}");
+    sessionStorage.setItem("is_system_admin", "{{ is_system_admin }}");
+    sessionStorage.setItem("can_manage_admins", "{{ can_manage_admins }}");
+
+    window.location.href = "{{ url_for('admin_dashboard') }}";
+</script>
+</body>
+</html>

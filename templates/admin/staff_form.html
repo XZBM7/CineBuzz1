@@ -1,0 +1,206 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <h1 class="mb-4">{{ action }} Staff Member</h1>
+
+    <form method="POST">
+        <div class="card glass-card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i> Account Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ admin.name if admin else '' }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               value="{{ admin.email if admin else '' }}" 
+                               {% if action == 'Edit' %}readonly{% endif %} required>
+                        {% if action == 'Edit' %}
+                            <small class="text-muted">Email cannot be changed after creation.</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               {% if action == 'Add' %}required{% endif %}>
+                        <small class="text-muted">
+                            {% if action == 'Edit' %}
+                                Leave blank to keep the current password.
+                            {% else %}
+                                Must be at least 8 characters long.
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass-card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-toggles me-2"></i> Permissions</h5>
+            </div>
+            <div class="card-body">
+                
+                {% set perms = admin.permissions if admin else {} %}
+
+                <h6 class="text-primary"><i class="bi bi-film me-2"></i> Movies</h6>
+                <div class="d-flex flex-wrap gap-3 mb-3">
+                    {% set movie_perms = perms.get('movies', []) %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="movies" value="create" id="m_create"
+                               {% if 'create' in movie_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="m_create">Create</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="movies" value="update" id="m_update"
+                               {% if 'update' in movie_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="m_update">Update</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="movies" value="delete" id="m_delete"
+                               {% if 'delete' in movie_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="m_delete">Delete</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="movies" value="read" id="m_read"
+                               {% if 'read' in movie_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="m_read">Read (View List)</label>
+                    </div>
+                </div>
+                
+                <hr>
+
+                <h6 class="text-primary"><i class="bi bi-calendar-event me-2"></i> Screenings (Showtimes)</h6>
+                <div class="d-flex flex-wrap gap-3 mb-3">
+                    {% set screening_perms = perms.get('screenings', []) %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="screenings" value="create" id="s_create"
+                               {% if 'create' in screening_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="s_create">Create</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="screenings" value="update" id="s_update"
+                               {% if 'update' in screening_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="s_update">Update</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="screenings" value="delete" id="s_delete"
+                               {% if 'delete' in screening_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="s_delete">Delete</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="screenings" value="read" id="s_read"
+                               {% if 'read' in screening_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="s_read">Read (View List)</label>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="text-primary"><i class="bi bi-projector me-2"></i> Halls</h6>
+                <div class="d-flex flex-wrap gap-3 mb-3">
+                    {% set hall_perms = perms.get('halls', []) %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="halls" value="create" id="h_create"
+                               {% if 'create' in hall_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="h_create">Create</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="halls" value="update" id="h_update"
+                               {% if 'update' in hall_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="h_update">Update</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="halls" value="delete" id="h_delete"
+                               {% if 'delete' in hall_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="h_delete">Delete</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="halls" value="read" id="h_read"
+                               {% if 'read' in hall_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="h_read">Read (View List)</label>
+                    </div>
+                </div>
+                
+                <hr>
+
+                <h6 class="text-primary"><i class="bi bi-cup-straw me-2"></i> Food & Drinks</h6>
+                <div class="d-flex flex-wrap gap-3 mb-3">
+                    {% set food_perms = perms.get('food', []) %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="food" value="create" id="f_create"
+                               {% if 'create' in food_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="f_create">Create</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="food" value="update" id="f_update"
+                               {% if 'update' in food_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="f_update">Update</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="food" value="delete" id="f_delete"
+                               {% if 'delete' in food_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="f_delete">Delete</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="food" value="read" id="f_read"
+                               {% if 'read' in food_perms %}checked{% endif %}>
+                        <label class="form-check-label" for="f_read">Read (View List)</label>
+                    </div>
+                </div>
+
+                {% if current_user.role == 'super_admin' %}
+                    <hr>
+                    <h6 class="text-danger"><i class="bi bi-person-badge me-2"></i> Staff Management (Admins)</h6>
+                    <p class="text-muted">
+                        Allow this admin to create, update, or delete other admin accounts?
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        {% set staff_perms = perms.get('staff', []) %}
+                        
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="staff" value="create" id="staff_create"
+                                   {% if 'create' in staff_perms %}checked{% endif %}>
+                            <label class="form-check-label" for="staff_create">Create</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="staff" value="update" id="staff_update"
+                                   {% if 'update' in staff_perms %}checked{% endif %}>
+                            <label class="form-check-label" for="staff_update">Update</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="staff" value="delete" id="staff_delete"
+                                   {% if 'delete' in staff_perms %}checked{% endif %}>
+                            <label class="form-check-label" for="staff_delete">Delete</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="staff" value="read" id="staff_read"
+                                   {% if 'read' in staff_perms %}checked{% endif %}>
+                            <label class="form-check-label" for="staff_read">Read (View List)</label>
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle me-2"></i> Save Changes
+            </button>
+            <a href="{{ url_for('manage_staff') }}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle me-2"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

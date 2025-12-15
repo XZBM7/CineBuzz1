@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Book Seats for {{ movie.title }}</h2>
+                <div class="session-timer alert alert-warning">
+                    Session Time Left: <span id="countdown">10:00</span>
+                </div>
+            </div>
+            <p><strong>Date:</strong> {{ screening.date }} | <strong>Time:</strong> {{ screening.time }} | <strong>Hall:</strong> {{ screening.hall }}</p>
+            
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            
+            <div class="alert alert-info glass-card">
+                <strong>Note:</strong> You can select up to 6 tickets at a time. Your session will expire in 10 minutes.
+            </div>
+            
+            <div class="screen text-center mb-4">SCREEN</div>
+            
+            <form method="POST" action="{{ url_for('book_screening', screening_id=screening._id) }}" id="booking-form">
+                <div class="seat-map mb-4">
+                    {% for row in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] %}
+                        <div class="row mb-2">
+                            <div class="col-1 text-end pe-0">
+                                <strong>{{ row }}</strong>
+                            </div>
+                            <div class="col-11">
+                                {% for seat_num in range(1, 16) %}
+                                    {% set seat_id = row ~ seat_num %}
+                                    {% if seat_id in booked_seats %}
+                                        <span class="seat booked" title="Seat {{ seat_id }} (Booked)">{{ seat_num }}</span>
+                                    {% else %}
+                                        <label>
+                                            <input type="checkbox" name="seats" value="{{ seat_id }}" class="d-none">
+                                            {% if row in ['G', 'H', 'I', 'J'] %}
+                                                <span class="seat vip" title="Seat {{ seat_id }} (VIP - $15)">{{ seat_num }}</span>
+                                            {% else %}
+                                                <span class="seat available" title="Seat {{ seat_id }} ($10)">{{ seat_num }}</span>
+                                            {% endif %}
+                                        </label>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="seat-legend mb-4">
+                    <span class="seat available me-2"></span> Regular ($10)
+                    <span class="seat booked mx-2"></span> Booked
+                    <span class="seat selected mx-2"></span> Selected (Regular)
+                    <span class="seat selected-vip mx-2"></span> Selected (VIP)
+                    <span class="seat vip mx-2"></span> VIP ($15)
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4">
+
+            {% if promotion %}
+            <div class="alert alert-food glass-card shadow-sm mb-3" role="alert" style="border-left-color: var(--secondary-color);">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-tag-fill me-3 fs-2" style="color: var(--secondary-color);"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">{{ promotion.name }}</h5>
+                        <p class="mb-0">{{ promotion.description }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card glass-card">
+                <div class="card-body">
+                    <h5 class="card-title">Booking Summary</h5>
+                    <p class="card-text">
+                        <strong>Movie:</strong> {{ movie.title }}<br>
+                        <strong>Cinema:</strong> {{ session.cinema_name }}<br>
+                        <strong>Date:</strong> {{ screening.date }}<br>
+                        <strong>Time:</strong> {{ screening.time }}<br>
+                        <strong>Hall:</strong> {{ screening.hall }}
+                    </p>
+                    <hr>
+                    <div id="selected-seats">
+                        <p>No seats selected</p>
+                    </div>
+                    <div id="selection-error" class="text-danger mb-2" style="display: none;">
+                        You can select up to 6 tickets only
+                    </div>
+                    <hr>
+
+                    <div id="price-summary">
+                        <div class="d-flex justify-content-between text-muted">
+                            <h6 class="mb-0">Subtotal</h6>
+                            <h6>$<span id="original-price">0</span></h6>
+                        </div>
+                        
+                        <div id="discount-line" class="d-flex justify-content-between text-success" style="display: none;">
+                            <h6 class="mb-0">
+                                Promotion (<span id="promo-name"></span>)
+                            </h6>
+                            <h6 class="mb-0">-$<span id="discount-amount">0</span></h6>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="fw-bold mb-0">Total</h4>
+                            <h4 class="fw-bold mb-0">$<span id="total-price">0</span></h4>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h5 class="mt-4">Payment Information</h5>
+                    <div class="mb-3">
+                        <label for="card-name" class="form-label">Cardholder Name</label>
+                        <input type="text" class="form-control" id="card-name" name="card_name" required>
+                        <div class="invalid-feedback" id="card-name-error">
+                            Please enter the cardholder name
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="card-number" class="form-label">Card Number</label>
+                        <input type="text" class="form-control" id="card-number" name="card_number" placeholder="1234 5678 9012 3456" required>
+                        <div class="invalid-feedback" id="card-number-error">
+                            Please enter a valid 16-digit card number
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="card-expiry" class="form-label">Expiry Date</label>
+                            <input type="text" class="form-control" id="card-expiry" name="card_expiry" placeholder="MM/YY" required>
+                            <div class="invalid-feedback" id="card-expiry-error">
+                                Please enter a valid expiry date (MM/YY)
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="card-cvv" class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="card-cvv" name="card_cvv" placeholder="123" required>
+                            <div class="invalid-feedback" id="card-cvv-error">
+                                Please enter a valid CVV (3-4 digits)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="save-card" name="save_card">
+                        <label class="form-check-label" for="save-card">
+                            Save card for future payments
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100" id="confirm-btn" disabled>Confirm Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .seat.selected-vip {
+        }
+        
+        .session-timer {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        #countdown {
+            font-family: monospace;
+            font-size: 1.2rem;
+        }
+        
+        .invalid-feedback {
+            display: none;
+        }
+        
+        .was-validated .form-control:invalid ~ .invalid-feedback {
+            display: block;
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        const PROMOTION = {{ promotion|tojson|safe }};
+        const REGULAR_PRICE = 10;
+        const VIP_PRICE = 15;
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const seats = document.querySelectorAll('.seat.available, .seat.vip');
+            const selectedSeatsDiv = document.getElementById('selected-seats');
+            const confirmBtn = document.getElementById('confirm-btn');
+            const bookingForm = document.getElementById('booking-form');
+            const paymentInputs = document.querySelectorAll('#card-name, #card-number, #card-expiry, #card-cvv');
+            const selectionError = document.getElementById('selection-error');
+            const countdownElement = document.getElementById('countdown');
+
+            const originalPriceSpan = document.getElementById('original-price');
+            const totalPriceSpan = document.getElementById('total-price');
+            const discountLine = document.getElementById('discount-line');
+            const promoNameSpan = document.getElementById('promo-name');
+            const discountAmountSpan = document.getElementById('discount-amount');
+            
+            const MAX_TICKETS = 6;
+            const SESSION_DURATION = 10 * 60; 
+            let selectedSeats = [];
+            let timeLeft = SESSION_DURATION;
+            let countdownInterval;
+            
+            startCountdown();
+            
+            function startCountdown() {
+                updateCountdownDisplay();
+                countdownInterval = setInterval(function() {
+                    timeLeft--;
+                    updateCountdownDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        sessionExpired();
+                    }
+                }, 1000);
+            }
+            
+            function updateCountdownDisplay() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                
+                if (timeLeft < 120) {
+                    countdownElement.parentElement.classList.add('alert-danger');
+                    countdownElement.parentElement.classList.remove('alert-warning');
+                }
+            }
+            
+            function sessionExpired() {
+                alert('Your session has expired. Please start your booking again.');
+                window.location.href = "{{ url_for('home') }}";
+            }
+            
+            seats.forEach(seat => {
+                seat.addEventListener('click', function() {
+                    const seatId = this.parentElement.querySelector('input').value;
+                    const isVip = this.classList.contains('vip');
+                    const alreadySelected = this.classList.contains('selected') || this.classList.contains('selected-vip');
+                    
+                    if (alreadySelected) {
+                        this.classList.remove('selected', 'selected-vip');
+                        selectedSeats = selectedSeats.filter(s => s.id !== seatId);
+                        selectionError.style.display = 'none';
+                    } else {
+                        if (selectedSeats.length >= MAX_TICKETS) {
+                            selectionError.style.display = 'block';
+                            return;
+                        }
+                        
+                        if (isVip) {
+                            this.classList.add('selected-vip');
+                        } else {
+                            this.classList.add('selected');
+                        }
+                        
+                        selectedSeats.push({
+                            id: seatId,
+                            price: isVip ? VIP_PRICE : REGULAR_PRICE, 
+                            type: isVip ? 'VIP' : 'Regular'
+                        });
+                    }
+                    
+                    updateSummary(); 
+                    validateForm();
+                });
+            });
+            
+            paymentInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    validateField(this);
+                    validateForm();
+                    resetSessionTimer();
+                });
+                
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+            });
+            
+            seats.forEach(seat => {
+                seat.addEventListener('click', resetSessionTimer);
+            });
+            
+            function resetSessionTimer() {
+                timeLeft = SESSION_DURATION;
+                countdownElement.parentElement.classList.remove('alert-danger');
+                countdownElement.parentElement.classList.add('alert-warning');
+            }
+            
+           
+            function updateSummary() {
+                if (selectedSeats.length === 0) {
+                    selectedSeatsDiv.innerHTML = '<p>No seats selected</p>';
+                    originalPriceSpan.textContent = '0';
+                    totalPriceSpan.textContent = '0';
+                    discountLine.style.display = 'none'; 
+                    return;
+                }
+                
+                let html = '<ul class="list-unstyled">';
+                let original_total = 0;
+                
+                selectedSeats.forEach(seat => {
+                    html += `<li>Seat ${seat.id} (${seat.type}) - $${seat.price}</li>`;
+                    original_total += seat.price;
+                });
+                
+                html += '</ul>';
+                selectedSeatsDiv.innerHTML = html;
+                originalPriceSpan.textContent = original_total; 
+
+                let discount = 0;
+                let final_total = original_total;
+
+                if (PROMOTION) { 
+                    const num_seats = selectedSeats.length;
+                    let free_tickets = 0;
+
+                    if (PROMOTION.type === 'B1G1F' && num_seats >= 2) {
+                        free_tickets = Math.floor(num_seats / 2);
+                    } else if (PROMOTION.type === 'B2G1F' && num_seats >= 3) {
+                        free_tickets = Math.floor(num_seats / 3);
+                    }
+
+                    if (free_tickets > 0) {
+                        const sorted_prices = selectedSeats.map(s => s.price).sort((a, b) => a - b);
+                        for (let i = 0; i < free_tickets; i++) {
+                            discount += sorted_prices[i];
+                        }
+                        
+                        promoNameSpan.textContent = PROMOTION.name;
+                        discountAmountSpan.textContent = discount;
+                        discountLine.style.display = 'flex'; 
+                    } else {
+                        discountLine.style.display = 'none'; 
+                    }
+                } else {
+                    discountLine.style.display = 'none'; 
+                }
+
+                final_total = original_total - discount;
+                totalPriceSpan.textContent = final_total; 
+            }
+           
+            function validateField(field) {
+                const value = field.value.trim();
+                
+                switch(field.id) {
+                    case 'card-name':
+                        if (value === '') {
+                            markInvalid(field, 'card-name-error', 'Please enter the cardholder name');
+                        } else {
+                            markValid(field, 'card-name-error');
+                        }
+                        break;
+                        
+                    case 'card-number':
+                        const cardNumber = value.replace(/\s/g, '');
+                        if (cardNumber === '') {
+                            markInvalid(field, 'card-number-error', 'Please enter a card number');
+                        } else if (!/^\d{16}$/.test(cardNumber)) {
+                            markInvalid(field, 'card-number-error', 'Please enter a valid 16-digit card number');
+                        } else {
+                            markValid(field, 'card-number-error');
+                        }
+                        break;
+                        
+                    case 'card-expiry':
+                        if (value === '') {
+                            markInvalid(field, 'card-expiry-error', 'Please enter an expiry date');
+                        } else if (!/^\d{2}\/\d{2}$/.test(value)) {
+                            markInvalid(field, 'card-expiry-error', 'Please enter a valid expiry date (MM/YY)');
+                        } else {
+                            const [month, year] = value.split('/');
+                            const currentYear = new Date().getFullYear() % 100;
+                            const currentMonth = new Date().getMonth() + 1;
+                            
+                            if (parseInt(year) < currentYear || 
+                                (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
+                                markInvalid(field, 'card-expiry-error', 'Card has expired');
+                            } else {
+                                markValid(field, 'card-expiry-error');
+                            }
+                        }
+                        break;
+                        
+                    case 'card-cvv':
+                        if (value === '') {
+                            markInvalid(field, 'card-cvv-error', 'Please enter a CVV');
+                        } else if (!/^\d{3,4}$/.test(value)) {
+                            markInvalid(field, 'card-cvv-error', 'Please enter a valid CVV (3-4 digits)');
+                        } else {
+                            markValid(field, 'card-cvv-error');
+                        }
+                        break;
+                }
+            }
+            
+            function markInvalid(field, errorId, message) {
+                field.classList.add('is-invalid');
+                document.getElementById(errorId).textContent = message;
+            }
+            
+            function markValid(field, errorId) {
+                field.classList.remove('is-invalid');
+            }
+            
+            function validateForm() {
+                const hasSeats = selectedSeats.length > 0;
+                
+                let paymentValid = true;
+                paymentInputs.forEach(input => {
+                    if (!input.value.trim() || input.classList.contains('is-invalid')) {
+                        paymentValid = false;
+                    }
+                });
+                
+                confirmBtn.disabled = !(hasSeats && paymentValid);
+            }
+            
+            document.getElementById('card-number').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, '');
+                if (value.length > 16) value = value.substr(0, 16);
+                value = value.replace(/(\d{4})/g, '$1 ').trim();
+                e.target.value = value;
+                validateField(this);
+                validateForm();
+                resetSessionTimer();
+            });
+            
+            document.getElementById('card-expiry').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 2) {
+                    value = value.substr(0, 2) + '/' + value.substr(2, 2);
+                }
+                e.target.value = value;
+                validateField(this);
+                validateForm();
+                resetSessionTimer();
+            });
+            
+            confirmBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                let isValid = true;
+                paymentInputs.forEach(input => {
+                    validateField(input);
+                    if (input.classList.contains('is-invalid')) {
+                        isValid = false;
+                    }
+                });
+                
+                if (selectedSeats.length === 0) {
+                    isValid = false;
+                    selectionError.style.display = 'block';
+                }
+                
+                if (isValid) {
+                    bookingForm.submit();
+                } else {
+                    const firstError = document.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

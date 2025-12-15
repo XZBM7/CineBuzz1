@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>My Bookings</h2>
+    <hr>
+    
+    {% if not bookings %}
+        <div class="alert alert-info">You don't have any bookings yet.</div>
+    {% else %}
+        <div class="row">
+            {% for booking in bookings %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img src="{{ booking.movie.image_url }}" class="img-fluid rounded" alt="{{ booking.movie.title }}">
+                                </div>
+                                <div class="col-md-8">
+                                    <h5 class="card-title">{{ booking.movie.title }}</h5>
+                                    <p class="card-text">
+                                        <strong>Date:</strong> {{ booking.screening.date }}<br>
+                                        <strong>Time:</strong> {{ booking.screening.time }}<br>
+                                        <strong>Hall:</strong> {{ booking.screening.hall }}<br>
+                                        <strong>Seats:</strong> {{ booking.booking.seats|join(', ') }}<br>
+                                        <strong>Total:</strong> ${{ booking.booking.total_price }}
+                                    </p>
+                                    <button type="button" class="btn btn-primary view-ticket-btn" 
+                                            data-booking-id="{{ booking.booking._id }}"
+                                            data-movie-title="{{ booking.movie.title }}"
+                                            data-date="{{ booking.screening.date }}"
+                                            data-time="{{ booking.screening.time }}"
+                                            data-seats="{{ booking.booking.seats|join(', ') }}"
+                                            data-total="{{ booking.booking.total_price }}">
+                                        View Ticket
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ticket Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <h4 id="modalMovieTitle"></h4>
+                    <p>
+                        <strong>Date:</strong> <span id="modalDate"></span><br>
+                        <strong>Time:</strong> <span id="modalTime"></span><br>
+                        <strong>Seats:</strong> <span id="modalSeats"></span><br>
+                        <strong>Total:</strong> $<span id="modalTotal"></span>
+                    </p>
+                    <div id="qrcode" class="my-3"></div>
+                    <p class="text-muted">Present this QR code at the cinema</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.view-ticket-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookingId = this.getAttribute('data-booking-id');
+                    const movieTitle = this.getAttribute('data-movie-title');
+                    const date = this.getAttribute('data-date');
+                    const time = this.getAttribute('data-time');
+                    const seats = this.getAttribute('data-seats');
+                    const total = this.getAttribute('data-total');
+                    
+                    document.getElementById('modalMovieTitle').textContent = movieTitle;
+                    document.getElementById('modalDate').textContent = date;
+                    document.getElementById('modalTime').textContent = time;
+                    document.getElementById('modalSeats').textContent = seats;
+                    document.getElementById('modalTotal').textContent = total;
+                    
+                    const qrContainer = document.getElementById('qrcode');
+                    qrContainer.innerHTML = ''; 
+                    
+                    const qrText = `Movie: ${movieTitle}\nDate: ${date}\nTime: ${time}\nSeats: ${seats}\nTotal: $${total}\nBooking ID: ${bookingId}`;
+                    new QRCode(qrContainer, {
+                        text: qrText,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('ticketModal'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+{% endblock %}

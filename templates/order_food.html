@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Order Food for Your Movie</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Booking Details</h5>
+                            <div class="mb-4">
+                                <p>
+                                    <strong>Movie:</strong> {{ booking.movie.title }}<br>
+                                    <strong>Date:</strong> {{ booking.screening.date }}<br>
+                                    <strong>Time:</strong> {{ booking.screening.time }}<br>
+                                    <strong>Hall:</strong> {{ booking.screening.hall }}
+                                </p>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Your food will be delivered to your seat before the movie starts.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="position-relative" style="height: 200px; overflow: hidden; border-radius: 10px;">
+                                <img src="{{ booking.movie.image_url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ booking.movie.title }}">
+                                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.4);"></div>
+                                <div class="position-absolute top-50 start-50 translate-middle text-center text-white">
+                                    <h5>{{ booking.movie.title }}</h5>
+                                    <p class="mb-0">{{ booking.screening.date }} at {{ booking.screening.time }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Select Food Items</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            {% for item in food_items %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    {% if item.image_url %}
+                                    <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.name }}" style="height: 150px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 150px;">
+                                        <i class="bi bi-image text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ item.name }}</h5>
+                                        <p class="card-text text-muted">{{ item.description }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-primary">${{ "%.2f"|format(item.price) }}</span>
+                                            <div class="input-group" style="width: 120px;">
+                                                <button class="btn btn-outline-secondary minus-btn" type="button">-</button>
+                                                <input type="number" class="form-control text-center quantity-input" 
+                                                       name="item_{{ item._id }}" value="0" min="0" max="10">
+                                                <button class="btn btn-outline-secondary plus-btn" type="button">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <label for="notes" class="form-label">Special Instructions</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Any special requests or allergies..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-basket"></i> Place Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.plus-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('.quantity-input');
+            input.value = parseInt(input.value) + 1;
+        });
+    });
+    
+    document.querySelectorAll('.minus-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('.quantity-input');
+            if (parseInt(input.value) > 0) {
+                input.value = parseInt(input.value) - 1;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+ {% block title %}Add Promotion{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h4 class="m-0 font-weight-bold text-primary">Add New Promotion</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Promotion Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="e.g., Buy 2 Get 1 Free" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="e.g., Get the 3rd ticket free! (Applied to cheapest ticket)." required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Promotion Type</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="" disabled selected>-- Select Type --</option>
+                                <option value="B1G1F">Buy 1 Get 1 Free</option>
+                                <option value="B2G1F">Buy 2 Get 1 Free</option>
+                                </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="movie_id" class="form-label">Link to Movie</label>
+                            <select class="form-select" id="movie_id" name="movie_id" required>
+                                <option value="" disabled selected>-- Select a Movie --</option>
+                                {% for movie in movies %}
+                                    <option value="{{ movie._id }}">{{ movie.title }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">The promotion will only apply to this movie.</small>
+                        </div>
+
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" checked>
+                            <label class="form-check-label" for="is_active">Activate this promotion immediately</label>
+                        </div>
+
+                        <hr class="my-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Add Promotion
+                        </button>
+                        <a href="{{ url_for('admin_promotions') }}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

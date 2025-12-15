@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .movie-item {
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    
+    #movieSearch {
+        height: 45px;
+        border-radius: 4px 0 0 4px;
+    }
+    
+    #searchButton {
+        border-radius: 0 4px 4px 0;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .movie-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .movie-card .card-body {
+        flex-grow: 1;
+    }
+    
+    .movie-card img {
+        height: 300px;
+        object-fit: cover;
+    }
+    
+    .view-toggle {
+        margin-bottom: 20px;
+    }
+    
+    .view-toggle .btn {
+        width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="row view-toggle">
+        <div class="col-12 text-center">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary active" id="showNowShowing">
+                    Now Showing
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="showComingSoon">
+                    Coming Soon
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="input-group mb-3">
+                <input type="text" id="movieSearch" class="form-control" placeholder="Search by title or genre..." aria-label="Search for movies">
+                <button class="btn btn-primary" type="button" id="searchButton">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn btn-outline-secondary" type="button" id="resetSearch">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="nowShowingSection">
+        <div class="row">
+            <div class="col-12">
+                <h2>Now Showing</h2>
+                <hr>
+            </div>
+            
+            <div class="row" id="nowShowingContainer">
+                {% for movie in now_showing %}
+                <div class="col-md-3 movie-item" data-title="{{ movie.title.lower() }}" data-genre="{{ movie.genre.lower() }}" data-type="now_showing">
+                    <div class="card movie-card mb-4">
+                        <img src="{{ movie.image_url }}" class="card-img-top" alt="{{ movie.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <p class="card-text text-muted">{{ movie.genre }} | {{ movie.duration }} mins</p>
+                            <a href="{{ url_for('movie_details', movie_id=movie._id) }}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="nowShowingNoResults" class="no-results col-12" style="display: none;">
+                No movies currently showing match your search.
+            </div>
+        </div>
+    </div>
+
+    <div id="comingSoonSection" style="display: none;">
+        <div class="row">
+            <div class="col-12">
+                <h2>Coming Soon</h2>
+                <hr>
+            </div>
+            
+            <div class="row" id="comingSoonContainer">
+                {% for movie in coming_soon %}
+                <div class="col-md-3 movie-item" data-title="{{ movie.title.lower() }}" data-genre="{{ movie.genre.lower() }}" data-type="coming_soon">
+                    <div class="card movie-card mb-4">
+                        <img src="{{ movie.image_url }}" class="card-img-top" alt="{{ movie.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <p class="card-text text-muted">{{ movie.genre }} | {{ movie.duration }} mins</p>
+                            <button class="btn btn-secondary" disabled>Coming Soon</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="comingSoonNoResults" class="no-results col-12" style="display: none;">
+                No upcoming movies match your search.
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const showNowShowing = document.getElementById('showNowShowing');
+    const showComingSoon = document.getElementById('showComingSoon');
+    const nowShowingSection = document.getElementById('nowShowingSection');
+    const comingSoonSection = document.getElementById('comingSoonSection');
+    const searchInput = document.getElementById('movieSearch');
+    const searchButton = document.getElementById('searchButton');
+    const resetButton = document.getElementById('resetSearch');
+    const nowShowingNoResults = document.getElementById('nowShowingNoResults');
+    const comingSoonNoResults = document.getElementById('comingSoonNoResults');
+    
+    showNowShowing.addEventListener('click', function() {
+        this.classList.add('active', 'btn-primary');
+        this.classList.remove('btn-outline-primary');
+        showComingSoon.classList.add('btn-outline-primary');
+        showComingSoon.classList.remove('active', 'btn-primary');
+        nowShowingSection.style.display = 'block';
+        comingSoonSection.style.display = 'none';
+        resetSearch();
+    });
+    
+    showComingSoon.addEventListener('click', function() {
+        this.classList.add('active', 'btn-primary');
+        this.classList.remove('btn-outline-primary');
+        showNowShowing.classList.add('btn-outline-primary');
+        showNowShowing.classList.remove('active', 'btn-primary');
+        comingSoonSection.style.display = 'block';
+        nowShowingSection.style.display = 'none';
+        resetSearch();
+    });
+    
+    searchButton.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') performSearch();
+    });
+    
+    resetButton.addEventListener('click', resetSearch);
+    
+    function performSearch() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const activeSection = nowShowingSection.style.display === 'none' ? 'coming_soon' : 'now_showing';
+        
+        let hasResults = false;
+        
+        const movies = document.querySelectorAll(`.movie-item[data-type="${activeSection}"]`);
+        movies.forEach(movie => {
+            const title = movie.dataset.title;
+            const genre = movie.dataset.genre;
+            
+            if (searchTerm === '' || title.includes(searchTerm) || genre.includes(searchTerm)) {
+                movie.style.display = 'block';
+                hasResults = true;
+            } else {
+                movie.style.display = 'none';
+            }
+        });
+        
+        if (activeSection === 'now_showing') {
+            nowShowingNoResults.style.display = hasResults || searchTerm === '' ? 'none' : 'block';
+        } else {
+            comingSoonNoResults.style.display = hasResults || searchTerm === '' ? 'none' : 'block';
+        }
+    }
+    
+    function resetSearch() {
+        searchInput.value = '';
+        performSearch();
+    }
+});
+</script>
+{% endblock %}

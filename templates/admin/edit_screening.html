@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Edit Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h4 class="m-0 font-weight-bold text-primary">Edit Screening</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        
+                        <div class="mb-3">
+                            <label for="movie_id" class="form-label">Movie</label>
+                            <select class="form-select" id="movie_id" name="movie_id" required>
+                                {% for movie in movies %}
+                                    <option value="{{ movie._id }}" {% if movie._id == screening.movie_id %}selected{% endif %}>
+                                        {{ movie.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cinema_id" class="form-label">Cinema Branch</label>
+                            <select class="form-select" id="cinema_id" name="cinema_id" required>
+                                {% for cinema in cinemas %}
+                                    <option value="{{ cinema._id }}" {% if cinema._id == screening.cinema_id %}selected{% endif %}>
+                                        {{ cinema.name }} ({{ cinema.city }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="{{ screening.date }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="time" class="form-label">Time</label>
+                                <input type="time" class="form-control" id="time" name="time" 
+                                       value="{{ screening.time }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="hall" class="form-label">Hall</label>
+                            <input type="text" class="form-control" id="hall" name="hall" 
+                                   value="{{ screening.hall }}" required>
+                        </div>
+
+                        <hr class="my-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Update Screening
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

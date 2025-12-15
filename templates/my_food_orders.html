@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">My Food Orders</h2>
+    
+    {% if not orders %}
+    <div class="alert alert-info">
+        You haven't placed any food orders yet.
+        <a href="{{ url_for('food_menu') }}" class="alert-link">Order now</a>.
+    </div>
+    {% else %}
+    <div class="row">
+        {% for order in orders %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Order #{{ loop.index }}</h5>
+                    <span class="badge bg-{% if order.status == 'completed' %}success{% else %}warning{% endif %}">
+                        {{ order.status|title }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                    
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order['items'] %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ "%.2f"|format(item.price) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="2">Total</th>
+                                <th>${{ "%.2f"|format(order.total) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

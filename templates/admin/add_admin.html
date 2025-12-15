@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Add New Admin - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Add New Admin</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   required 
+                                   pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
+                                   title="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
+                            <div class="form-text">
+                                At least 8 characters, with uppercase, lowercase, and numbers.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                   required
+                                   title="Please enter the same password as above.">
+                            <div class="form-text">Type the password again to confirm.</div>
+                        </div>
+
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_admins" name="can_manage_admins" value="on">
+                            <label class="form-check-label" for="can_manage_admins">
+                                <strong>Grant permission to manage other admins?</strong>
+                            </label>
+                            <div class="form-text">If checked, this user can add, edit, and delete other (non-system) admins.</div>
+                        </div>
+
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_manage_list') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Admin</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var password = document.getElementById("password");
+        var confirm_password = document.getElementById("confirm_password");
+
+        function validatePasswordMatch() {
+            if (password.value != confirm_password.value) {
+                confirm_password.setCustomValidity("Passwords Don't Match");
+            } else {
+                confirm_password.setCustomValidity("");
+            }
+        }
+
+        password.onkeyup = validatePasswordMatch;
+        confirm_password.onkeyup = validatePasswordMatch;
+    });
+</script>
+{% endblock %}

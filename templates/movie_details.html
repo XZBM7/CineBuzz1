@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="{{ movie.image_url }}" class="img-fluid rounded shadow-lg animate__animated animate__fadeIn" alt="{{ movie.title }}">
+        </div>
+        <div class="col-md-8 animate__animated animate__fadeInRight">
+            <h1>{{ movie.title }}</h1>
+            <hr>
+            <p><i class="bi bi-tag me-2"></i><strong>Genre:</strong> {{ movie.genre }}</p>
+            <p><i class="bi bi-clock me-2"></i><strong>Duration:</strong> {{ movie.duration }} minutes</p>
+            <p><strong>Description:</strong></p>
+            <p>{{ movie.description }}</p>
+        </div>
+    </div>
+
+    {% if promotions %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="section-title" style="text-align: left; font-size: 2rem; margin-bottom: 1.5rem;">
+                <i class="bi bi-tags-fill" style="color: var(--tertiary-color);"></i>
+                Special Offers
+            </h3>
+            
+            {% for promo in promotions %}
+            <div class="alert alert-food glass-card shadow-sm animate__animated animate__fadeInUp" role="alert" style="border-left-color: var(--secondary-color);">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-tag-fill me-3 fs-2" style="color: var(--secondary-color);"></i>
+                    <div>
+                        <h4 class="alert-heading">{{ promo.name }}</h4>
+                        <p class="mb-0">{{ promo.description }}</p>
+                        <hr>
+                        <p class="mb-0 fst-italic">
+                            This offer will be applied automatically at checkout when you select your tickets.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3 class="section-title" style="text-align: left; font-size: 2rem; margin-bottom: 1.5rem;">
+                <i class="bi bi-calendar-event" style="color: var(--primary-color);"></i>
+                Screenings at {{ session.cinema_name }}
+            </h3>
+            
+            <div class="row mb-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="input-group glass-card" style="border-radius: 16px; padding: 5px;">
+                        <span class="input-group-text bg-transparent border-0" style="font-weight: 500;">
+                            <i class="bi bi-calendar-date me-2"></i> Filter by Date
+                        </span>
+                        <select class="form-select bg-transparent border-0" id="dateFilter" style="cursor: pointer;">
+                            <option value="all">All Dates</option>
+                            {% set unique_dates = [] %}
+                            {% for screening in screenings %}
+                                {% if screening.date not in unique_dates %}
+                                    {% set _ = unique_dates.append(screening.date) %}
+                                    <option value="{{ screening.date }}">{{ screening.date }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive glass-card" style="padding: 1rem; border: none;">
+                <table class="table table-striped" id="screeningsTable" style="background-color: transparent; border-color: var(--glass-border);">
+                    <thead>
+                        <tr style="border-color: var(--glass-border);">
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Hall</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if screenings %}
+                        {% for screening in screenings %}
+                        <tr class="screening-row" data-date="{{ screening.date }}" style="border-color: var(--glass-border);">
+                            <td>{{ screening.date }}</td>
+                            <td>{{ screening.time }}</td>
+                            <td>{{ screening.hall }}</td>
+                            <td>
+                                <a href="{{ url_for('book_screening', screening_id=screening._id) }}" class="btn btn-sm btn-primary pulse">Book Now</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <h5 class="mb-1">No Screenings Available</h5>
+                                <p class="text-muted mb-0">There are currently no scheduled screenings for this movie at {{ session.cinema_name }}.</p>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilter = document.getElementById('dateFilter');
+            const screeningRows = document.querySelectorAll('.screening-row');
+            
+            dateFilter.addEventListener('change', function() {
+                const selectedDate = this.value;
+                
+                screeningRows.forEach(row => {
+                    if (selectedDate === 'all' || row.dataset.date === selectedDate) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .input-group-text {
+        }
+        
+        #dateFilter {
+        }
+        
+        .table-responsive {
+            min-height: 200px; 
+        }
+
+        .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: rgba(0, 0, 0, 0.02);
+            color: var(--text-color);
+        }
+        [data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+{% endblock %}

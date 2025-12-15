@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Booking Confirmed!</h2>
+                    <div class="my-4">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="qr-code">
+                    </div>
+                    <h4>{{ movie.title }}</h4>
+                    <p class="mb-1"><strong>Date:</strong> {{ screening.date }}</p>
+                    <p class="mb-1"><strong>Time:</strong> {{ screening.time }}</p>
+                    <p class="mb-1"><strong>Hall:</strong> {{ screening.hall }}</p>
+                    <p class="mb-1"><strong>Seats:</strong> {{ seats|join(', ') }}</p>
+                    <hr>
+                    <p>Your booking details have been sent to your email. You can also view them in your account.</p>
+                    <a href="{{ url_for('my_bookings') }}" class="btn btn-primary">View My Bookings</a>
+                    <a href="{{ url_for('home') }}" class="btn btn-secondary">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

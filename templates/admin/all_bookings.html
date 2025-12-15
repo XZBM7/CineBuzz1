@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">All System Bookings</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Bookings List</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Booking Date</th>
+                            <th>User Name</th>
+                            <th>User Email</th>
+                            <th>Movie</th>
+                            <th>Cinema</th>
+                            <th>Screening</th>
+                            <th>Hall</th>
+                            <th>Seats</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking._id }}</td>
+                            <td>
+                                {{ booking.booking_date.strftime('%Y-%m-%d %H:%M') if booking.booking_date else 'N/A' }}
+                            </td>
+                            
+                            <td>{{ booking.userDetails.name if booking.userDetails else 'User Not Found' }}</td>
+                            <td>{{ booking.userDetails.email if booking.userDetails else 'N/A' }}</td>
+
+                            <td>{{ booking.movieDetails.title if booking.movieDetails else 'Movie Not Found' }}</td>
+                            
+                            <td>{{ booking.cinemaDetails.name if booking.cinemaDetails else 'Cinema Not Found' }}</td>
+                            
+                            <td>
+                                {{ booking.screeningDetails.date if booking.screeningDetails else 'N/A' }}
+                                at
+                                {{ booking.screeningDetails.time if booking.screeningDetails else 'N/A' }}
+                            </td>
+                            <td>{{ booking.screeningDetails.hall if booking.screeningDetails else 'N/A' }}</td>
+                            
+                            <td>
+                                {{ booking.seats | join(', ') }}
+                            </td>
+                            <td>{{ booking.total_price }} $</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

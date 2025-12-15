@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}Add Movie{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1 text-primary fw-bold">Add New Movie</h1>
+                    <p class="text-muted">Fill in the movie details and select available cinema branches</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="m-0 fw-bold"><i class="fas fa-film me-2"></i>Movie Information</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="addMovieForm">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <h5 class="fw-semibold text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Basic Information
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="title" class="form-label fw-semibold">Movie Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" id="title" name="title" placeholder="Enter movie title" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter movie description" required></textarea>
+                                <div class="form-text">Provide a brief synopsis of the movie plot.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="duration" class="form-label fw-semibold">Duration (minutes) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="duration" name="duration" placeholder="e.g., 120" min="1" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="genre" class="form-label fw-semibold">Genre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="genre" name="genre" placeholder="e.g., Action, Drama, Comedy" required>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12 mb-4">
+                                <h5 class="fw-semibold text-primary mb-3">
+                                    <i class="fas fa-cog me-2"></i>Additional Details
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="now_showing" selected>Now Showing</option>
+                                    <option value="coming_soon">Coming Soon</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="image_url" class="form-label fw-semibold">Poster Image URL <span class="text-danger">*</span></label>
+                                <input type="url" class="form-control" id="image_url" name="image_url" placeholder="https://example.com/poster.jpg" required>
+                                <div class="form-text">Provide a direct link to the movie poster image.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12 mb-4">
+                                <h5 class="fw-semibold text-primary mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Cinema Availability
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Available Cinema Branches <span class="text-danger">*</span></label>
+                            <p class="text-muted small mb-3">Select all branches where this movie will be available for screening.</p>
+                            
+                            <div class="border rounded-3 p-4 bg-light" style="max-height: 300px; overflow-y: auto;">
+                                {% if cinemas_by_city %}
+                                    {% for city, cinemas in cinemas_by_city.items() %}
+                                        <div class="city-section mb-3">
+                                            <h6 class="text-primary fw-bold mb-2 pb-1 border-bottom">
+                                                <i class="fas fa-city me-2"></i>{{ city }}
+                                            </h6>
+                                            <div class="row">
+                                                {% for cinema in cinemas %}
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input cinema-checkbox" type="checkbox" name="cinema_ids" value="{{ cinema._id }}" id="cinema_{{ cinema._id }}">
+                                                        <label class="form-check-label d-flex align-items-center" for="cinema_{{ cinema._id }}">
+                                                            <i class="fas fa-theater-masks text-muted me-2"></i>
+                                                            {{ cinema.name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    
+                                    <div class="mt-3 pt-2 border-top">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBtn">
+                                            <i class="fas fa-check-double me-1"></i>Select All Branches
+                                        </button>
+                                        <div id="cinema-error" class="text-danger mt-2" style="display:none;">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Please select at least one cinema branch.
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-theater-masks fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-danger mb-2">No Cinema Branches Found</h6>
+                                        <p class="text-muted small">Please add cinema branches before adding movies.</p>
+                                        <a href="{{ url_for('add_cinema') }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Add Cinema Branch
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mt-5 pt-3 border-top">
+                            <div class="col-12">
+                                <div class="d-flex gap-3 justify-content-end">
+                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-lg btn-outline-secondary px-4">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-lg btn-primary px-4">
+                                        <i class="fas fa-plus me-2"></i>Add Movie
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const form = document.getElementById('addMovieForm');
+    const cinemaCheckboxes = document.querySelectorAll('.cinema-checkbox');
+    const cinemaError = document.getElementById('cinema-error');
+    
+    // Function to check if at least one checkbox is checked
+    function validateCinemas() {
+        const isChecked = Array.from(cinemaCheckboxes).some(checkbox => checkbox.checked);
+        if (!isChecked) {
+            cinemaError.style.display = 'block';
+            return false;
+        } else {
+            cinemaError.style.display = 'none';
+            return true;
+        }
+    }
+
+    // Toggle select/deselect all functionality
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function() {
+            const allChecked = Array.from(cinemaCheckboxes).every(checkbox => checkbox.checked);
+            
+            cinemaCheckboxes.forEach(checkbox => {
+                checkbox.checked = !allChecked;
+            });
+            
+            this.innerHTML = allChecked ? 
+                '<i class="fas fa-check-double me-1"></i>Select All Branches' : 
+                '<i class="fas fa-times me-1"></i>Deselect All Branches';
+            
+            // Re-validate after select/deselect all
+            validateCinemas();
+        });
+    }
+
+    // Add submit event listener to the form for validation
+    form.addEventListener('submit', function(event) {
+        if (!validateCinemas()) {
+            event.preventDefault(); // Prevent form submission if validation fails
+        }
+    });
+
+    // Add change listeners to checkboxes to hide error on selection
+    cinemaCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (Array.from(cinemaCheckboxes).some(cb => cb.checked)) {
+                cinemaError.style.display = 'none';
+            }
+        });
+    });
+
+    // Initial check (useful if the page loads with no cinemas selected)
+    // We don't need to call validateCinemas here, it will be checked on submit.
+});
+</script>
+
+<style>
+.card {
+    border-radius: 12px;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.city-section {
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+</style>
+{% endblock %}
